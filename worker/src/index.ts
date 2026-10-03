@@ -10,6 +10,7 @@
 
 import {
   Agent,
+  unstable_callable,
   routeAgentRequest,
   Connection,
 } from "agents";
@@ -25,7 +26,7 @@ interface ExpenseState {
 
 export class ExpenseAgent extends Agent<Env, ExpenseState> {
   initialState: ExpenseState = {
-    userId: this.id?.toString() || "unknown",
+    userId: (this as any).ctx?.id?.toString() || "unknown",
     lastSyncedAt: null,
     transactionCount: 0,
     totalSpent: 0,
@@ -93,7 +94,7 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
 
   // ─── Callable: Sync Transactions ────────────────────────────────────────
 
-  @callable()
+  @unstable_callable()
   async syncTransactions(
     options?: { startDate?: string; endDate?: string }
   ): Promise<{
@@ -160,8 +161,8 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
       });
 
       // Cache in KV
-      if (this.env.CACHE) {
-        await this.env.CACHE.put(
+      if ((this as any).env.CACHE) {
+        await (this as any).env.CACHE.put(
           `transactions:${this.state.userId}`,
           JSON.stringify({
             transactions,
@@ -196,7 +197,7 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
 
   // ─── Callable: Get Summary ──────────────────────────────────────────────
 
-  @callable()
+  @unstable_callable()
   async getSummary(period: "7d" | "30d" | "90d" = "30d"): Promise<{
     totalSpent: number;
     totalIncome: number;
@@ -238,7 +239,7 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
 
   // ─── Callable: Get Transactions ─────────────────────────────────────────
 
-  @callable()
+  @unstable_callable()
   async getTransactions(
     options?: { limit?: number; offset?: number; category?: string }
   ): Promise<any[]> {
@@ -265,13 +266,132 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
       : [];
   }
 
+  // ─── Private: Categorize with Workers AI ────────────────────────────────
+
+  private async categorizeWithWorkersAI(
+    transactions: any[],
+    env: Env
+  ): Promise<Array<{ id: string; category: string; confidence: number; isAnomaly: boolean }>> {
+    // Build prompt with transaction list
+    const txList = transactions.map((tx) => 
+      `- ID: ${tx.id}, Description: ${tx.description}, Amount: ${tx.amount} ${tx.currency || "USD"}`
+    ).join("\n");
+
+    const prompt = `You are a financial categorization assistant. Categorize each transaction into one of these categories: Food & Dining, Shopping, Transportation, Bills & Utilities, Entertainment, Health & Medical, Travel, Personal, Business, Other.
+
+For each transaction, return a JSON object with:
+- id: transaction ID
+- category: the category name
+- confidence: confidence score between 0 and 1
+- isAnomaly: true if the transaction seems unusual or suspicious
+
+Transactions:
+${txList}
+
+Return ONLY a valid JSON array of objects, no other text.`;
+
+    // Try Workers AI first
+    try {
+      const aiResponse = await (env.AI as any).run("@cf/meta/llama-3.1-8b-instruct", {
+        prompt,
+      });
+      
+      // Parse the response
+      let responseText = "";
+      if (typeof aiResponse === "string") {
+        responseText = aiResponse;
+      } else if (aiResponse.response) {
+        responseText = aiResponse.response;
+      }
+
+      // Extract JSON from response
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch (err) {
+      console.error("[ExpenseAgent] Workers AI error:", err);
+      // Fall through to next provider
+    }
+
+    // Fallback 1: OpenAI
+    const openaiKey = (env as any).OPENAI_API_KEY;
+    if (openaiKey) {
+      try {
+        const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${openaiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.3,
+          }),
+        });
+
+        if (openaiResponse.ok) {
+          const data = (await openaiResponse.json()) as any;
+          const content = data.choices?.[0]?.message?.content || "";
+          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+        }
+      } catch (err) {
+        console.error("[ExpenseAgent] OpenAI error:", err);
+        // Fall through to next provider
+      }
+    }
+
+    // Fallback 2: Anthropic
+    const anthropicKey = (env as any).ANTHROPIC_API_KEY;
+    if (anthropicKey) {
+      try {
+        const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": anthropicKey,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-3-haiku-20240307",
+            max_tokens: 4096,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+
+        if (anthropicResponse.ok) {
+          const data = (await anthropicResponse.json()) as any;
+          const content = data.content?.[0]?.text || "";
+          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+        }
+      } catch (err) {
+        console.error("[ExpenseAgent] Anthropic error:", err);
+      }
+    }
+
+    // If all providers failed, return basic categorization
+    return transactions.map((tx) => ({
+      id: tx.id,
+      category: "Other",
+      confidence: 0.1,
+      isAnomaly: false,
+    }));
+  }
+
   // ─── Private: Fetch PayPal Transactions ─────────────────────────────────
 
   private async fetchPayPalTransactions(
     startDate?: string,
     endDate?: string
   ): Promise<any[]> {
-    if (!this.env.PAYPAL_CLIENT_ID || !this.env.PAYPAL_CLIENT_SECRET) {
+    if (!(this as any).env.PAYPAL_CLIENT_ID || !(this as any).env.PAYPAL_CLIENT_SECRET) {
       throw new Error("PayPal credentials not configured");
     }
 
@@ -331,8 +451,8 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
 
   private async getPayPalToken(): Promise<string> {
     // Try to get from KV cache first
-    if (this.env.CACHE) {
-      const cached = await this.env.CACHE.get("paypal:token");
+    if ((this as any).env.CACHE) {
+      const cached = await (this as any).env.CACHE.get("paypal:token");
       if (cached) {
         try {
           const data = JSON.parse(cached) as any;
@@ -346,7 +466,7 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
     }
 
     const credentials = Buffer.from(
-      `${this.env.PAYPAL_CLIENT_ID}:${this.env.PAYPAL_CLIENT_SECRET}`
+      `${(this as any).env.PAYPAL_CLIENT_ID}:${(this as any).env.PAYPAL_CLIENT_SECRET}`
     ).toString("base64");
 
     const res = await fetch(
@@ -370,8 +490,8 @@ export class ExpenseAgent extends Agent<Env, ExpenseState> {
     const expiresIn = data.expires_in || 3600;
 
     // Cache the token
-    if (this.env.CACHE) {
-      await this.env.CACHE.put(
+    if ((this as any).env.CACHE) {
+      await (this as any).env.CACHE.put(
         "paypal:token",
         JSON.stringify({
           token,
@@ -391,7 +511,7 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    ctx: ExecutionContext
+    ctx: any
   ): Promise<Response> {
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
@@ -406,16 +526,15 @@ export default {
     }
 
     // Route agent requests
-    const agentResponse = routeAgentRequest(request, env);
+    const agentResponse = await routeAgentRequest(request, env);
     if (agentResponse) {
       // Add CORS headers
-      const response = await agentResponse;
-      const headers = new Headers(response.headers);
+      const headers = new Headers(agentResponse.headers);
       headers.set("Access-Control-Allow-Origin", env.ALLOWED_ORIGIN || "*");
       headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
       headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-      return new Response(response.body, {
-        status: response.status,
+      return new Response(agentResponse.body, {
+        status: agentResponse.status,
         headers,
       });
     }

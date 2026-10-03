@@ -5,18 +5,24 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "types": "wrangler types"
+    "types": "wrangler types",
+    "setup": "node scripts/setup-cloudflare.js",
+    "db:init": "wrangler d1 execute paypal-expense-db --file=schema.sql",
+    "db:query": "wrangler d1 execute paypal-expense-db --command"
   },
   "dependencies": {
-    "agents": "^0.0.93",
-    "@cloudflare/ai": "^1.0.60"
+    "@cloudflare/ai": "^1.0.60",
+    "@gately/auth-cli": "^0.1.0",
+    "@gately/auth-client": "^0.1.0",
+    "@gately/auth-core": "^0.1.0",
+    "agents": "^0.0.93"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241205.0",
-    "wrangler": "^3.99.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "wrangler": "^3.99.0"
   }
 }

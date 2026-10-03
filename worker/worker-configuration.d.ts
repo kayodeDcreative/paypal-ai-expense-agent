@@ -5,6 +5,9 @@ interface Env {
   // Workers AI binding
   AI: Ai;
 
+  // D1 Database
+  DB: D1Database;
+
   // KV cache
   CACHE: KVNamespace;
 
@@ -15,6 +18,14 @@ interface Env {
   PAYPAL_CLIENT_ID: string;
   PAYPAL_CLIENT_SECRET: string;
   PAYPAL_API_BASE: string; // https://api-m.sandbox.paypal.com
+
+  // AI Provider API Keys (optional, for fallback)
+  OPENAI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+
+  // Gately Auth Configuration
+  GATELY_AUTH_URL?: string;
+  GATELY_AUTH_API_KEY?: string;
 
   // Allowed origin for CORS (the Next.js frontend URL)
   ALLOWED_ORIGIN: string; // e.g. http://localhost:3000
