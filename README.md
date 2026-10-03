@@ -1,62 +1,61 @@
-# 🤖 PayPal AI Expense Agent
+# PayPal AI Expense Agent
 
-> An intelligent expense management system powered by AI that automatically analyzes, categorizes, and provides insights on your PayPal transactions.
+An intelligent expense management system that connects to your PayPal account, automatically categorizes transactions using GPT-4o, detects anomalies, and surfaces actionable financial insights through an interactive web dashboard.
 
-**Built for the [PayPal AI Hackathon](https://paypal-ai.devpost.com/) 2026**
+Built for the [PayPal AI Hackathon 2026](https://paypal-ai.devpost.com/).
 
 ---
 
-## 🎯 Overview
+## Overview
 
-PayPal AI Expense Agent connects to your PayPal account, fetches your transaction history, and applies an AI agent to automatically categorize expenses, detect anomalies, and generate actionable financial insights — all in a clean, interactive web dashboard.
+The agent fetches your PayPal transaction history via the REST API, runs each transaction through an AI categorization pipeline, flags unusual spending patterns, and presents everything in a sortable, filterable dashboard — no manual tagging required.
 
-## ✨ Features
+## Features
 
-- 🔄 **Real-time PayPal Sync** — Fetches transactions via PayPal REST API (sandbox)
-- 🤖 **AI Categorization** — GPT-4 automatically categorizes every transaction
-- 📊 **Interactive Dashboard** — Spending summaries, trend charts, and breakdowns
-- 📋 **AG Grid Transactions Table** — Sortable, filterable, exportable transaction log
-- 🔍 **Anomaly Detection** — AI flags unusual or suspicious spending patterns
-- 💡 **Smart Insights** — Natural language financial recommendations
-- 📈 **Spending Trends** — Monthly and category-level charts via Recharts
-- 🎯 **Budget Alerts** — Visual warnings when categories exceed thresholds
+- Real-time PayPal sync via PayPal REST API (sandbox)
+- AI-powered transaction categorization with GPT-4o
+- Interactive dashboard with spending summaries and trend charts
+- Sortable, filterable, exportable transaction table (AG Grid)
+- Anomaly detection with natural language explanations
+- Smart financial insights and recommendations
+- Monthly and category-level spending trends (Recharts)
+- Budget threshold alerts
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Data Grid | AG Grid (Sponsor) |
-| Charts | Recharts |
-| PayPal | PayPal REST API + JS SDK |
-| AI | OpenAI GPT-4o |
-| Deployment | Render (Sponsor) |
+| Layer      | Technology                  |
+|------------|-----------------------------|
+| Framework  | Next.js 14 (App Router)     |
+| Language   | TypeScript                  |
+| Styling    | Tailwind CSS                |
+| Data Grid  | AG Grid                     |
+| Charts     | Recharts                    |
+| PayPal     | PayPal REST API + JS SDK    |
+| AI         | OpenAI GPT-4o               |
+| Deployment | Render                      |
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- [PayPal Developer Account](https://developer.paypal.com/) (free)
-- OpenAI API Key
+- [PayPal Developer Account](https://developer.paypal.com/) (free sandbox)
+- OpenAI API key
 
 ### Setup
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/yourusername/paypal-ai-expense-agent.git
+# Clone the repository
+git clone https://github.com/kayodedcreative/paypal-ai-expense-agent.git
 cd paypal-ai-expense-agent
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Configure environment variables
+# Copy the environment template and fill in your credentials
 cp .env.example .env.local
-# Edit .env.local with your credentials
 
-# 4. Run the development server
+# Start the development server
 npm run dev
 ```
 
@@ -64,64 +63,67 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Environment Variables
 
+Copy `.env.example` to `.env.local` and set the following values:
+
 ```env
-# PayPal Sandbox (from https://developer.paypal.com/dashboard/)
-NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_client_id
-PAYPAL_CLIENT_SECRET=your_secret
+# PayPal Sandbox — https://developer.paypal.com/dashboard/
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_sandbox_client_id
+PAYPAL_CLIENT_SECRET=your_sandbox_secret
 PAYPAL_API_BASE=https://api-m.sandbox.paypal.com
 
 # OpenAI
-OPENAI_API_KEY=your_openai_key
+OPENAI_API_KEY=your_openai_api_key
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-## 📖 Architecture
+> This project uses PayPal's sandbox environment. No real money is processed during development or testing.
+
+## Project Structure
 
 ```
 app/
-├── page.tsx                    # Dashboard (home)
-├── transactions/page.tsx       # AG Grid transactions table
-├── insights/page.tsx           # AI insights & anomalies
-├── layout.tsx                  # Root layout with sidebar nav
-├── globals.css                 # Global styles
-└── api/
-    ├── paypal/
-    │   ├── transactions/       # Fetch PayPal transactions
-    │   └── token/              # Get PayPal access token
-    └── ai/
-        ├── categorize/         # AI categorization agent
-        └── insights/           # AI insights generator
+  page.tsx                    # Dashboard home
+  transactions/page.tsx       # AG Grid transactions table
+  insights/page.tsx           # AI insights and anomaly view
+  layout.tsx                  # Root layout with sidebar navigation
+  globals.css
+  api/
+    paypal/
+      transactions/           # Fetch PayPal transactions
+      token/                  # Obtain PayPal access token
+    ai/
+      categorize/             # AI categorization endpoint
+      insights/               # AI insights endpoint
 components/
-├── Sidebar.tsx
-├── StatCard.tsx
-├── SpendingChart.tsx
-├── CategoryBreakdown.tsx
-└── AnomalyAlert.tsx
+  Sidebar.tsx
+  StatCard.tsx
+  SpendingChart.tsx
+  CategoryBreakdown.tsx
+  AnomalyAlert.tsx
 lib/
-├── paypal.ts                   # PayPal API helpers
-├── openai.ts                   # OpenAI client
-├── mockData.ts                 # Sandbox demo data
-└── types.ts                    # Shared TypeScript types
+  paypal.ts                   # PayPal API helpers
+  openai.ts                   # OpenAI client
+  mockData.ts                 # Sandbox demo data
+  types.ts                    # Shared TypeScript types
+worker/                       # Cloudflare Worker (optional edge layer)
 ```
 
-## 🎥 Demo
+## Available Scripts
 
-[YouTube Demo Link - Under 3 minutes]
+```bash
+npm run dev        # Start development server
+npm run build      # Production build
+npm run start      # Start production server
+npm run lint       # Run ESLint
+npm run type-check # TypeScript check without emit
+```
 
-## 🏆 Hackathon Prize Categories
+## Contributing
 
-- ✅ Best Use of PayPal + AI
-- ✅ Best Use of Agentic Commerce
-- ✅ Best Use of AG Grid
-- ✅ Best Use of Render
-- ✅ Most Impactful
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## 📝 License
+## License
 
 [MIT](LICENSE)
-
----
-
-> **Note**: This project uses PayPal's sandbox environment. No real money is processed during testing.
