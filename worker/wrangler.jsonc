@@ -10,11 +10,12 @@
   },
 
   // KV namespace for caching PayPal tokens and transaction data
+  // Run: wrangler kv:namespace create "expense-agent-cache" --preview
   "kv_namespaces": [
     {
       "binding": "CACHE",
-      "id": "REPLACE_WITH_YOUR_KV_ID",
-      "preview_id": "REPLACE_WITH_YOUR_KV_PREVIEW_ID"
+      "id": "expense_agent_cache",
+      "preview_id": "expense_agent_cache_preview"
     }
   ],
 

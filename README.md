@@ -127,3 +127,48 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 [MIT](LICENSE)
+
+
+## 🚀 Production Deployment
+
+Deploy to **Cloudflare Workers** (backend) + **Cloudflare Pages** (frontend) in minutes.
+
+### Quick Deploy
+
+1. **Backend (Worker):**
+   ```bash
+   cd worker
+   wrangler deploy
+   ```
+
+2. **Frontend (Pages):**
+   - Connect GitHub repo to Cloudflare Pages
+   - Set environment variables
+   - Auto-deploys on push
+
+→ **See [DEPLOY_CLOUDFLARE.md](./DEPLOY_CLOUDFLARE.md) for detailed instructions**
+
+### Live URLs (After Deployment)
+
+- **Frontend:** https://paypal-ai-expense-agent.pages.dev
+- **Worker API:** https://paypal-ai-expense-agent-worker.your-subdomain.workers.dev
+
+## Cost & Scale
+
+| Component | Free Tier | Beyond |
+|-----------|-----------|--------|
+| Cloudflare Pages | 500 builds/month | Free tier sufficient |
+| Workers | 100k req/day | $0.50/M requests |
+| KV Namespace | 100k ops/day | $5/month |
+| Durable Objects | 1M req/month | $0.15/M requests |
+| **Total** | **$0** | Scales cheaply |
+
+Perfect for hackathon and beyond!
+
+## Documentation
+
+- **[QUICKSTART.md](./QUICKSTART.md)** — Get running in 5 minutes
+- **[DEPLOY_CLOUDFLARE.md](./DEPLOY_CLOUDFLARE.md)** — Production deployment guide
+- **[WORKER_INTEGRATION.md](./WORKER_INTEGRATION.md)** — Worker backend setup
+- **[SUBMISSION.md](./SUBMISSION.md)** — Hackathon submission checklist
+- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** — Full project overview

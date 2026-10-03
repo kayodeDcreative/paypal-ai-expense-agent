@@ -1,0 +1,46 @@
+/**
+ * Cloudflare Pages Configuration
+ * 
+ * This file configures the Next.js frontend deployment on Cloudflare Pages.
+ * The Pages build will:
+ * 1. Install dependencies
+ * 2. Run `npm run build`
+ * 3. Deploy the build output to Cloudflare Pages CDN
+ * 
+ * Environment: https://developers.cloudflare.com/pages/functions/bindings/
+ */
+
+{
+  "pages_build_caching": true,
+
+  // Environment-specific configuration
+  "env": {
+    // Production environment
+    "production": {
+      "routes": [
+        {
+          "pattern": "example.com",
+          "zone_id": "your_zone_id"
+        }
+      ],
+      "vars": {
+        "NEXT_PUBLIC_APP_URL": "https://paypal-ai-expense-agent.pages.dev",
+        "NEXT_PUBLIC_WORKER_URL": "https://paypal-ai-expense-agent-worker.your-subdomain.workers.dev"
+      }
+    },
+
+    // Preview environment (staging)
+    "preview": {
+      "vars": {
+        "NEXT_PUBLIC_APP_URL": "https://[branch].paypal-ai-expense-agent.pages.dev",
+        "NEXT_PUBLIC_WORKER_URL": "https://paypal-ai-expense-agent-worker.your-subdomain.workers.dev"
+      }
+    }
+  },
+
+  // Observability
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
+  }
+}

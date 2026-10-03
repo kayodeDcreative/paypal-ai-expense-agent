@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "setup": "node scripts/setup.js",
+    "build:full": "node scripts/build.js",
+    "deploy": "node scripts/deploy.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.7.0",
@@ -22,7 +25,8 @@
     "axios": "^1.7.7",
     "date-fns": "^4.1.0",
     "recharts": "^2.12.7",
-    "lucide-react": "^0.454.0"
+    "lucide-react": "^0.454.0",
+    "@anthropic-ai/sdk": "^0.24.0"
   },
   "devDependencies": {
     "@types/node": "^22",
