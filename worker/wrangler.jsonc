@@ -1,0 +1,46 @@
+{
+  "name": "paypal-ai-expense-agent",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Workers AI binding — free LLM inference at the edge
+  "ai": {
+    "binding": "AI"
+  },
+
+  // KV namespace for caching PayPal tokens and transaction data
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "REPLACE_WITH_YOUR_KV_ID",
+      "preview_id": "REPLACE_WITH_YOUR_KV_PREVIEW_ID"
+    }
+  ],
+
+  // Durable Object for the AI Agent
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "EXPENSE_AGENT",
+        "class_name": "ExpenseAgent"
+      }
+    ]
+  },
+
+  // SQLite-backed agent state
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ExpenseAgent"]
+    }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  }
+}
